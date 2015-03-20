@@ -6,12 +6,22 @@ var db = require('../lib/db');
 
 router.get('/', function(req, res) {
     db.pollsAnswer.mapReduce(
-        function(){emit(this.order[0], 1)},
-        function(key,values){return Array.sum(values)},
-        {out: {inline: 1}},
-        function (err, mapReduced) {
+        function(){
+            var points = this.order.length;
+            for (var i in this.order){
+                emit(this.order[i], points--);
+            }
+        },
+        function(key, values){
+            return Array.sum(values);
+        },
+        {
+            query: {},
+            out: {inline: 1}  //  "scores"
+        },
+        function (err, mapReduced){
             res.render('result', { title: 'Results', results: mapReduced });
         }
-    )
+    );
 });
 module.exports.router = router;
